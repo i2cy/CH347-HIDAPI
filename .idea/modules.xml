@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/CH347PythonLib.iml" filepath="$PROJECT_DIR$/.idea/CH347PythonLib.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../GTEM_tests/.idea/GTEM_tests.iml" filepath="$PROJECT_DIR$/../GTEM_tests/.idea/GTEM_tests.iml" />
+    </modules>
+  </component>
+</project>
