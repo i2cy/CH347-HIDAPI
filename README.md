@@ -12,7 +12,7 @@ _? [CH347-HIDAPI Github Page](https://github.com/i2cy/ch347-hidapi) ?_
   <a href="https://github.com/i2cy/ch347-hidapi/master/LICENSE">
     <img src="https://img.shields.io/github/license/i2cy/ch347-hidapi.svg" alt="license">
   </a>
-  <a href="https://pypi.python.org/pypi/ch347-hidapi">
+  <a href="https://pypi.python.org/pypi/ch347api">
     <img src="https://img.shields.io/pypi/v/ch347-hidapi.svg" alt="pypi">
   </a>
   <img src="https://img.shields.io/badge/python-3.7+-blue.svg" alt="python">
@@ -28,7 +28,7 @@ bridge chip in Python language.
 [CH347-Chip Official Site](https://www.wch.cn/products/CH347.html)
 
 ## Installation
-`pip install ch347-hidapi`
+`pip install ch347api`
 
 ## Requirements
 `Python >= 3.7`

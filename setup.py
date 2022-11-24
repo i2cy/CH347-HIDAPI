@@ -11,8 +11,8 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="ch347-hidapi",
-    version="0.0.1",
+    name="ch347api",
+    version="0.0.2",
     author="I2cy Cloud",
     author_email="i2cy@outlook.com",
     description="A Python Library provides full access of SPI settings and communication"
