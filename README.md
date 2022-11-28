@@ -13,7 +13,7 @@ _? [CH347-HIDAPI Github Page](https://github.com/i2cy/ch347-hidapi) ?_
     <img src="https://img.shields.io/github/license/i2cy/ch347-hidapi.svg" alt="license">
   </a>
   <a href="https://pypi.python.org/pypi/ch347api">
-    <img src="https://img.shields.io/pypi/v/ch347-hidapi.svg" alt="pypi">
+    <img src="https://img.shields.io/pypi/v/ch347api.svg" alt="pypi">
   </a>
   <img src="https://img.shields.io/badge/python-3.7+-blue.svg" alt="python">
 </p>
