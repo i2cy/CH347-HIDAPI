@@ -364,7 +364,7 @@ if __name__ == '__main__':
     print("Manufacturer: %s" % test_dev.get_manufacturer_string())
     print("Product: %s" % test_dev.get_product_string())
     print("Serial No: %s" % test_dev.get_serial_number_string())
-    test_dev.init_SPI(0, mode=1)
+    test_dev.init_SPI(1, mode=1)
     test_dev.set_CS1()
     test_data_frame_length = 8192
     time.sleep(0.2)
