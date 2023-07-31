@@ -7,6 +7,6 @@
     <orderEntry type="module" module-name="GTEM_tests" />
   </component>
   <component name="PackageRequirementsSettings">
-    <option name="versionSpecifier" />
+    <option name="versionSpecifier" value="不指定版本" />
   </component>
 </module>
