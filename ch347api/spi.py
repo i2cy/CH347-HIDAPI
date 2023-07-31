@@ -285,14 +285,18 @@ class CH347HIDDev(hid.device):
     def spi_write(self, data: bytes) -> int:
         """
         write data to SPI devices
-        :param data: bytes, max length up to 65532 bytes
+        :param data: bytes, max length up to 32768 bytes
         :return: int, length of sent data
         """
         if not (self.CS1_enabled or self.CS2_enabled):
             raise Exception("no CS enabled yet")
 
         length = len(data)
-        raw = struct.pack("B<HB<Hp", 0x00, length + 3, 0xc4, length, data)
+        if length > 32768:
+            # exceeded max package size
+            raise Exception("package size {} exceeded max size of 32768 Bytes".format(length))
+
+        raw = struct.pack("<BHBH", 0x00, length + 3, 0xc4, length) + data
         self.write(raw)
 
         return length
@@ -300,13 +304,17 @@ class CH347HIDDev(hid.device):
     def spi_read_write(self, data: bytes) -> list:
         """
         write data to SPI devices
-        :param data: bytes, max length up to 65532 bytes
+        :param data: bytes, max length up to 32768 bytes
         :return: int, length of sent data
         """
         if not (self.CS1_enabled or self.CS2_enabled):
             raise Exception("no CS enabled yet")
 
         length = len(data)
+        if length > 32768:
+            # exceeded max package size
+            raise Exception("package size {} exceeded max size of 32768 Bytes".format(length))
+
         sent = 0
         while sent < length:
             left = length - sent
@@ -323,9 +331,7 @@ class CH347HIDDev(hid.device):
         while len(ret) < length:
             frame = self.read(512)
             frame_len, cmd_id, payload_len = struct.unpack("<HBH", bytes(frame[:5]))
-            # print(frame_len, payload_len)
             ret += frame[5:5 + payload_len]
-            # print("current len: {}".format(len(ret)))
 
         return ret
 
@@ -337,6 +343,11 @@ class CH347HIDDev(hid.device):
         """
         if not (self.CS1_enabled or self.CS2_enabled):
             raise Exception("no CS enabled yet")
+
+        if length > 32768:
+            # exceeded max package size
+            raise Exception("package size {} exceeded max size of 32768 Bytes".format(length))
+
         raw = struct.pack("<BHBHL", 0x00, 7, 0xc3, 4, length)
         self.write(raw)
 
@@ -353,48 +364,51 @@ if __name__ == '__main__':
     import random
     from hashlib import sha256
 
+    """
+    Tests below requires MOSI-MISO short connected (outer-loop)
+    """
+
+
     def generate_random_data(length=50):
+        # generate test bytes for transmission
         res = []
         for i in range(length):
             res.append(int(random.random() * 255))
         return bytes(res)
 
 
+    # initialize a new CH347HIDDev device object
     test_dev = CH347HIDDev(VENDOR_ID, PRODUCT_ID, 1)
+
+    # print HID device information
     print("Manufacturer: %s" % test_dev.get_manufacturer_string())
     print("Product: %s" % test_dev.get_product_string())
     print("Serial No: %s" % test_dev.get_serial_number_string())
-    test_dev.init_SPI(1, mode=1)
-    test_dev.set_CS1()
-    test_data_frame_length = 8192
+
+    # initialize SPI settings
+    test_dev.init_SPI(0, mode=3)  # CLK speed: 60Mhz, SPI mode: 0b11
+    test_dev.set_CS1()  # enable CS1 for transmission
+
+    test_data_frame_length = 32768
     time.sleep(0.2)
 
+    input("(press ENTER to perform test)")
+
+    # generate test bytes
     data = generate_random_data(test_data_frame_length)
 
-    # while True:
-    #     print(bytes(test_dev.spi_read(16)).hex())
+    # write A5 5A 5A A5 through API
+    test_dev.spi_write(b"\xa5\x5a\x5a\xa5")
 
+    # read & write test
+    print("performing spi_read_write test...")
     feed = test_dev.spi_read_write(data)
     print("R/W loop accusation test result: {}".format(bytes(feed) == data))
+
+    # specialized speed test (for project)
     t0 = time.time()
-    for ele in range(200000 // (test_data_frame_length // 4)):
-        feed = test_dev.spi_read_write(data)
+    for ele in range(4 * 3 * 200_000 // test_data_frame_length + 1):
+        feed = test_dev.spi_read(test_data_frame_length)
     print("1 sec of gtem data trans time spent {:.2f} ms".format((time.time() - t0) * 1000))
-
-    test_read_length = 4 * 3 * 200000
-
-    print("reading {} bytes of data from device".format(test_read_length))
-    t0 = time.time()
-    test_dev.spi_read(test_read_length)
-    print("data length: {}, time spent {:.2f} ms".format(len(feed), (time.time() - t0) * 1000))
-
-    print("testing 512MB of data (8K per frame) trans accusation")
-    acc = 0
-    for i in range(65536):
-        data = generate_random_data(8192)
-        feed = test_dev.spi_read_write(data)
-        if bytes(feed) == data:
-            acc += 100 / 65536
-    print("test result, Acc: {:.2f}%".format(acc))
 
     test_dev.close()
