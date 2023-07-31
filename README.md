@@ -33,3 +33,11 @@ bridge chip in Python language.
 ## Requirements
 `Python >= 3.7`
 `hidapi`
+
+## CAUTION
+The communication protocol with CH347 through USB-HID I wrote in this project based on the official
+demonstration APP. In other words that it was inferred from captured HID package when APP communicates.
+
+THUS, THIS API MAY NOT FULLY CAPABLE OF EVERY FUNCTION IN OFFICIAL API FROM CH347DLL.DLL.
+
+And I2C API is not ready. I2C bus example from demo app is frustrating and I need time to figure it out.
