@@ -4,7 +4,7 @@
 
 # CH347-HIDAPI Python Library
 
-_? [CH347-HIDAPI Github Page](https://github.com/i2cy/ch347-hidapi) ?_
+_+ [CH347-HIDAPI Github Page](https://github.com/i2cy/ch347-hidapi) +_
 
 </div>
 
@@ -19,11 +19,14 @@ _? [CH347-HIDAPI Github Page](https://github.com/i2cy/ch347-hidapi) ?_
 </p>
 
 ## Abstract
-This project is the API library of CH347 USB-SPI bridge chip based on Python.
-Standard USB-HID mode setting of CH347 chip supported only.
+This project is the API library of CH347 USB-SPI/I2C bridge chip based on Python.
 
-This library provides full access of SPI settings and communication with CH347 USB-SPI 
+`Standard USB-HID mode setting of CH347 chip supported only`
+
+This library provides full access of SPI/I2C settings and communication with CH347 USB-SPI 
 bridge chip in Python language.
+
+For demonstration and code reference please refer to the `test.py` file in [source page](https://github.com/i2cy/CH347-HIDAPI/blob/master/test.py).
 
 [CH347-Chip Official Site](https://www.wch.cn/products/CH347.html)
 
@@ -40,4 +43,8 @@ demonstration APP. In other words that it was inferred from captured HID package
 
 THUS, THIS API MAY NOT FULLY CAPABLE OF EVERY FUNCTION IN OFFICIAL API FROM CH347DLL.DLL.
 
-And I2C API is not ready. I2C bus example from demo app is frustrating and I need time to figure it out.
+## Update Notes
+
+#### 2023-08-06
+ 1. Now with fully compatible I2C support, I2C clock speed level: 0 -> 20KHz, 1 -> 100KHz, 2 -> 400KHz, 3 -> 750KHz
+ 2. Added test.py for demonstration

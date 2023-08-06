@@ -34,25 +34,38 @@ if __name__ == '__main__':
     print("Product: %s" % test_dev.get_product_string())
     print("Serial No: %s" % test_dev.get_serial_number_string())
 
+    # -*- [ i2c test ] -*-
+
+    # initialize I2C with speed 400KHz
+    test_dev.init_I2C(2)
+
+    input("(press ENTER to perform I2C test)")
+
+    # write 0x75 to device with address 0x68
+    print("I2C test address 0x68")
+    status = test_dev.i2c_write(0x68, 0x75)
+    print("I2C write 0x75 test: {}".format(status))
+
+    # read 2 bytes from device with address 0x68
+    status, feedback = test_dev.i2c_read(0x68, 2)
+    print("I2C read 2 bytes test: {}, {}".format(status, feedback.hex()))
+
+    # read 1 byte of register 0x75 from device with address 0x68
+    status, feedback = test_dev.i2c_read(0x68, 1, 0x75)
+    print("I2C read 1 byte with register address 0x75 test: {}, {}".format(status, feedback.hex()))
+
+    # read 2 bytes of register 0x74 from device with address 0x68
+    status, feedback = test_dev.i2c_read(0x68, 2, b"\x74")
+    print("I2C read 2 bytes with register address 0x74 test: {}, {}".format(status, feedback.hex()))
+
+    input("(press ENTER to perform SPI test)")
+
     # initialize SPI settings
     test_dev.init_SPI(0, mode=1)  # CLK speed: 60Mhz, SPI mode: 0b11
     test_dev.set_CS1()  # enable CS1 for transmission
 
     test_data_frame_length = 32768
     time.sleep(0.2)
-
-    # i2c test
-    test_dev.init_I2C(2)
-
-    for i in range(1):
-        status, feedback = test_dev.i2c_read_write_raw(b"\xd1\x75", 0)
-        print("I2C test NO.{}: {}, {}".format(i + 1, status, feedback))
-
-    try:
-        input("(press ENTER to perform test)")
-    except KeyboardInterrupt:
-        test_dev.close()
-        exit()
 
     # generate test bytes
     data = generate_random_data(test_data_frame_length)

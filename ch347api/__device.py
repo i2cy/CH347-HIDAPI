@@ -9,6 +9,8 @@
 import hid
 import struct
 from .__spi import CSConfig, SPIConfig
+from .__i2c import convert_i2c_address, convert_int_to_bytes
+from typing import Tuple, Any
 
 VENDOR_ID: int = 6790
 PRODUCT_ID: int = 21980
@@ -35,6 +37,7 @@ class CH347HIDDev(hid.device):
         self.CS2_enabled = False
         self.cs_activate_delay = 0
         self.cs_deactivate_delay = 0
+        self.i2c_initiated = False
 
     def reset(self):
         """
@@ -52,20 +55,80 @@ class CH347HIDDev(hid.device):
         :return: None
         """
         self.write(struct.pack("<BHBB", 0x00, 3, 0xaa, 0x60 | clock_speed_level))
+        self.i2c_initiated = True
 
-    def i2c_read_write_raw(self, data: bytes, read_len: int = 0) -> tuple:
+    def i2c_write(self, addr: (int, bytes), data: (int, bytes)) -> bool:
+        """
+        write data through I2C bus using 7-bits address
+        :param addr: Any[int, bytes], 7-bits of device address
+        :param data: Any[int, bytes], one byte or several bytes of data to send (62 bytes max),
+        this method will automatically convert it into bytes with byte order 'big' unsigned if data type is int,
+        e.g. 0x00f1f2 -> b'\xf1\xf2'
+        :return: bool, operation status
+        """
+        # convert address
+        addr = convert_i2c_address(addr, read=False)
+
+        # convert data
+        data = convert_int_to_bytes(data)
+
+        # assemble i2c frame
+        payload = addr + data
+        # send data through i2c stream
+        status, feedback = self.i2c_read_write_raw(payload)
+
+        return status
+
+    def i2c_read(self, addr: (int, bytes), read_length: int,
+                 register_addr: (int, bytes) = None) -> Tuple[bool, bytes]:
+        """
+        read byte(s) data from i2c bus with register address using 7-bits of device address
+        :param addr: Any[int, bytes], 7-bits of device address
+        :param read_length: int, length
+        :param register_addr: Optional[int, bytes], one byte or several bytes of address of register,
+        this method will automatically convert it into bytes with byte order 'big' unsigned if data type is int,
+        e.g. 0x00f1f2 -> b'\xf1\xf2'
+        :return: Tuple[operation_status bool, feedback bytes]
+        """
+        # convert address
+        if register_addr is None:
+            register_addr = b""
+            # convert address with reading signal
+            addr = convert_i2c_address(addr, read=True)
+
+        else:
+            register_addr = convert_int_to_bytes(register_addr)
+            # convert address with writing signal
+            addr = convert_i2c_address(addr, read=False)
+
+        # assemble payload
+        payload = addr + register_addr
+
+        # send and receive data from i2c bus
+        status, feedback = self.i2c_read_write_raw(payload, read_len=read_length)
+
+        return status, feedback
+
+    def i2c_read_write_raw(self, data: bytes, read_len: int = 0) -> Tuple[bool, bytes]:
         """
         read and write i2c bus through I2CStream
         :param read_len: int, length of data to read (max 63B)
         :param data: bytes
         :return: tuple(<bool status>, <bytes feedback>)
         """
+        if not self.i2c_initiated:
+            raise Exception('I2C device initialization required')
+
         if read_len == 0:
             tail = b"\x75"
         elif read_len == 1:
-            tail = struct.pack("<BB", 0xc0, 0x75)
+            tail = b"\xc0\x75"
+            if len(data) > 1:
+                tail = b"\x74\x81\xd1" + tail
         elif read_len < 64:
-            tail = struct.pack("<BBBbBB", 0x74, 0x81, 0xd1, -64 + read_len, 0xc0, 0x75)
+            tail = struct.pack("<bBB", -65 + read_len, 0xc0, 0x75)
+            if len(data) > 1:
+                tail = b"\x74\x81\xd1" + tail
         else:
             raise Exception("read length exceeded max size of 63 Bytes")
         payload = struct.pack("<BHBBB", 0x00, len(data) + len(tail) + 4, 0xaa, 0x74, len(data) | 0b1000_0000)
@@ -74,12 +137,17 @@ class CH347HIDDev(hid.device):
         self.write(payload)
 
         feedback = bytes(self.read(512))
-        payload_length, rb1 = struct.unpack("<HB", feedback[:3])
-        payload = feedback[3: payload_length + 2]
+        payload_length = struct.unpack("<H", feedback[:2])[0]
+        ack_stops = len(data) + bool(read_len) + 2
+        if len(data) == 1:
+            ack_stops -= 1
+        ack_signals = feedback[2:ack_stops]
+        payload = feedback[ack_stops: payload_length + 2]
         # print("i2c package received:", feedback)
-        print("i2c feedback payload length: {}, rb1: {}, content: {}".format(payload_length, rb1, feedback[:payload_length + 2]))
+        print("i2c feedback payload length: {}, acks: {}, content: {}".format(payload_length, ack_signals,
+                                                                              feedback[:payload_length + 2]))
 
-        return rb1 == 1, payload
+        return sum(ack_signals) == len(ack_signals), payload
 
     # --*-- [ SPI ] --*--
     def init_SPI(self, clock_speed_level: int = 1, is_MSB: bool = True,
@@ -178,6 +246,7 @@ class CH347HIDDev(hid.device):
 
         raw = struct.pack("<BHBH", 0x00, length + 3, 0xc4, length) + data
         self.write(raw)
+        self.read(64)
 
         return length
 

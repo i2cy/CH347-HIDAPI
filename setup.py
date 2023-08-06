@@ -12,10 +12,10 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="ch347api",
-    version="0.0.4",
+    version="0.1.0",
     author="I2cy Cloud",
     author_email="i2cy@outlook.com",
-    description="A Python Library provides full access of SPI settings and communication"
+    description="A Python Library provides full access of SPI/I2C settings and communication"
                 " with CH347 USB-SPI bridge chip in Python language.",
     long_description=long_description,
     long_description_content_type="text/markdown",
