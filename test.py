@@ -58,11 +58,8 @@ if __name__ == '__main__':
     status, feedback = test_dev.i2c_read(0x68, 2, b"\x74")
     print("I2C read 2 bytes with register address 0x74 test: {}, {}".format(status, feedback.hex()))
 
-    input("(press ENTER to perform SPI test)")
-
     # initialize SPI settings
-    test_dev.init_SPI(0, mode=1)  # CLK speed: 60Mhz, SPI mode: 0b11
-    test_dev.set_CS1()  # enable CS1 for transmission
+    test_dev.init_SPI(0, mode=0)  # CLK speed: 60Mhz, SPI mode: 0b11
 
     test_data_frame_length = 32768
     time.sleep(0.2)
@@ -70,18 +67,29 @@ if __name__ == '__main__':
     # generate test bytes
     data = generate_random_data(test_data_frame_length)
 
-    # write A5 5A 5A A5 through API
-    test_dev.spi_write(b"\xa5\x5a\x5a\xa5")
+    input("(press ENTER to perform SPI test)")
 
-    # read & write test
-    print("performing spi_read_write test...")
-    feed = test_dev.spi_read_write(data)
-    print("R/W loop accusation test result: {}".format(bytes(feed) == data))
+    # -*- [ spi test ] -*-
+    
+    # write A5 5A 5A A5 through API
+    test_dev.set_CS1()  # enable CS1 for transmission
+    test_dev.spi_write(b"\xa5\x5a\x5a\xa5")
+    test_dev.spi_read(2)
+    test_dev.set_CS1(False)
 
     # specialized speed test (for project)
     t0 = time.time()
+    test_dev.set_CS1()  # enable CS1 for transmission
     for ele in range(4 * 3 * 200_000 // test_data_frame_length + 1):
         feed = test_dev.spi_read(test_data_frame_length)
+    test_dev.set_CS1(False)
     print("1 sec of gtem data trans time spent {:.2f} ms".format((time.time() - t0) * 1000))
+
+    # read & write test
+    print("performing spi_read_write test...")
+    test_dev.set_CS1()  # enable CS1 for transmission
+    feed = test_dev.spi_read_write(data)
+    test_dev.set_CS1(False)
+    print("R/W loop accusation test result: {}".format(bytes(feed) == data))
 
     test_dev.close()
