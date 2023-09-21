@@ -144,8 +144,8 @@ class CH347HIDDev(hid.device):
         ack_signals = feedback[2:ack_stops]
         payload = feedback[ack_stops: payload_length + 2]
         # print("i2c package received:", feedback)
-        print("i2c feedback payload length: {}, acks: {}, content: {}".format(payload_length, ack_signals,
-                                                                              feedback[:payload_length + 2]))
+        # print("i2c feedback payload length: {}, acks: {}, content: {}".format(payload_length, ack_signals,
+        #                                                                       feedback[:payload_length + 2]))
 
         return sum(ack_signals) == len(ack_signals), payload
 
