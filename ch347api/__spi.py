@@ -6,6 +6,17 @@
 # Created on: 2022/11/11
 
 
+class SPIClockFreq:
+    f_60M = 0
+    f_30M = 1
+    f_15M = 2
+    f_7M5 = 3
+    f_3M75 = 4
+    f_1M875 = 5
+    f_937K5 = 6
+    f_468K75 = 7
+
+
 class SPIConfig(list):
 
     def __init__(self):

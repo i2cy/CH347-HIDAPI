@@ -10,6 +10,13 @@ from typing import Any
 import struct
 
 
+class I2CClockFreq:
+    f_20K = 0
+    f_100K = 1
+    f_400K = 2
+    f_750K = 3
+
+
 def convert_i2c_address(addr: (int, bytes), read: bool = False) -> bytes:
     """
     static method for address conversion
