@@ -32,7 +32,7 @@ class I2CDevice:
 
         if not self.dev.i2c_initiated:
             # initialize i2c device if doesn't
-            self.dev.init_I2C()
+            self.dev.init_I2C(clock_freq_level=clock_freq_level)
 
     def write(self, reg: (int, bytes) = None, data: (int, bytes) = None) -> bool:
         """
