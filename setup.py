@@ -12,7 +12,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="ch347api",
-    version="0.1.0",
+    version="0.2.0",
     author="I2cy Cloud",
     author_email="i2cy@outlook.com",
     description="A Python Library provides full access of SPI/I2C settings and communication"
