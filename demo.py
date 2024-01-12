@@ -102,6 +102,7 @@ def uart_demo():
     print("[UART] wrote {} bytes with content \"{}\"".format(wrote, test_b2.decode("utf-8")))
 
     # uart read test
+    # time.sleep(0.2)
     read = uart.read(len(test_b1 + test_b2))
     print("[UART] read {} bytes of data test result: {}".format(len(read), bytes(read) == test_b1 + test_b2))
     print("[UART] received: {}".format(bytes(read)))
