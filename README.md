@@ -19,11 +19,11 @@ _+ [CH347-HIDAPI Github Page](https://github.com/i2cy/ch347-hidapi) +_
 </p>
 
 ## Abstract
-This project is the API library of CH347 USB-SPI/I2C bridge chip based on Python.
+This project is the API library of CH347 USB-SPI/I2C/UART bridge chip based on Python.
 
 `Standard USB-HID mode setting of CH347 chip supported only`
 
-This library provides full access of SPI/I2C settings and communication with CH347 USB-SPI 
+This library provides full access of SPI/I2C/UART settings and communication with CH347 USB-SPI/I2C/UART 
 bridge chip in Python language.
 
 __For demonstration and code reference please refer to the `demo.py` file in [source page](https://github.com/i2cy/CH347-HIDAPI/blob/master/demo.py).__
@@ -44,6 +44,11 @@ demonstration APP. In other words that it was inferred from captured HID package
 THUS, THIS API MAY NOT FULLY CAPABLE OF EVERY FUNCTION IN OFFICIAL API FROM CH347DLL.DLL.
 
 ## Update Notes
+
+#### 2024-01-12
+ 1. Now with fully compatible UART (UART1 with pins TXD1/RXD1/RTS1/CTS1/DTR1) support under mode 3 (which is HID mode),
+ 2. Baudrate supports ranging from 1.2K to 9M
+ 3. Multithread receiver for UART (optional, default is on) to receive the data in parallel
 
 #### 2024-01-08
  1. Added independent I2C interface class objects (I2CDevice) and SPI interface class objects (SPIDevice)

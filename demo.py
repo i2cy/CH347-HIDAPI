@@ -8,7 +8,7 @@
 
 import random
 import time
-from ch347api import CH347HIDDev, I2CDevice, SPIDevice, SPIClockFreq, I2CClockFreq
+from ch347api import CH347HIDDev, I2CDevice, SPIDevice, UARTDevice, SPIClockFreq, I2CClockFreq
 
 
 def i2c_demo():
@@ -61,7 +61,7 @@ def spi_demo():
     # i2c = I2CDevice(addr=0x68, ch347_device=dev)
 
     # write test (activate CS -> write data -> deactivate CS)
-    print("performing SPI write test")
+    print("[SPI] performing SPI write test")
     spi.write_CS1(b"hello world")
     spi.write_CS2(b"this is ch347")
     spi.write_CS1([0, 1, 2, 3])
@@ -72,16 +72,54 @@ def spi_demo():
     spi.write_CS1(b"this is ch347")
 
     # read test (activate CS -> read data -> deactivate CS)
-    print("performing SPI read test")
-    print("received 16 bytes from SPI bus on CS1:", bytes(spi.read_CS1(16)))
+    print("[SPI] performing SPI read test")
+    print("[SPI] received 16 bytes from SPI bus on CS1:", bytes(spi.read_CS1(16)))
 
     # write&read test (activate CS -> read data -> deactivate CS)
-    random_bytes = random.randbytes(512)
-    print("write read test result (with MOSI, MISO short connected): {}".format(
+    random_bytes = b"\xa5\x5a\x5a\xa5" * 128
+    print("[SPI] write read test result (with MOSI, MISO short connected): {}".format(
         bytes(spi.writeRead_CS1(random_bytes)) == random_bytes
     ))
+
+
+def uart_demo():
+    # while performing this test please make sure TX and RX pin short connected
+
+    # initialize an uart communication object
+    # -*- Way 1 -*-
+    uart = UARTDevice(baudrate=7_500_000)
+
+    # -*- Way 2 -*- (with no multithreading receiver)
+    # uart = UARTDevice(baudrate=115200, stop_bits=1, verify_bits=0, timeout=128, multithreading=False)
+
+    # uart write test
+    test_b1 = b"hello world, this is ch347. "
+    test_b2 = b"using CH347-HIDAPI"
+    test_b3 = b"\xa5\x5a\x5a\xa5\x00\x01\x02\x03\xfc\xfd\xfe\xff\xa5\x5a\x5a\xa5"
+    wrote = uart.write(test_b1)
+    print("[UART] wrote {} bytes with content \"{}\"".format(wrote, test_b1.decode("utf-8")))
+    wrote = uart.write(test_b2)
+    print("[UART] wrote {} bytes with content \"{}\"".format(wrote, test_b2.decode("utf-8")))
+
+    # uart read test
+    read = uart.read(len(test_b1 + test_b2))
+    print("[UART] read {} bytes of data test result: {}".format(len(read), bytes(read) == test_b1 + test_b2))
+    print("[UART] received: {}".format(bytes(read)))
+
+    # uart accuracy test
+    print("[UART] continuous sending and receiving test with 4MB size in progress..")
+    payload = test_b3 * 64 * 1024 * 4
+    t0 = time.time()
+    uart.write(payload)
+    read = uart.read(len(payload), timeout=15)
+    print("[UART] 4MB payload received, time spent: {:.2f} ms, accuracy test result: {}".format(
+        (time.time() - t0) * 1000, bytes(read) == payload))
+
+    # [VITAL] kill sub-thread(receiver thread) for safe exit
+    uart.kill()
 
 
 if __name__ == "__main__":
     i2c_demo()
     spi_demo()
+    uart_demo()

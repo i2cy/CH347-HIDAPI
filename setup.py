@@ -12,11 +12,11 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="ch347api",
-    version="0.2.0",
+    version="0.3.0",
     author="I2cy Cloud",
     author_email="i2cy@outlook.com",
-    description="A Python Library provides full access of SPI/I2C settings and communication"
-                " with CH347 USB-SPI bridge chip in Python language.",
+    description="A Python Library provides full access of SPI/I2C/UART settings and communication"
+                " with CH347 USB-SPI/I2C/UART bridge chip in Python language.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/i2cy/ch347-hidapi",

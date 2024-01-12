@@ -12,31 +12,129 @@ from .__spi import CSConfig, SPIConfig
 from .__i2c import convert_i2c_address, convert_int_to_bytes
 from typing import Tuple, Any
 from functools import wraps
+import warnings
 
 VENDOR_ID: int = 6790
 PRODUCT_ID: int = 21980
 
 
+class CH347HIDUART1(hid.device):
+
+    def __init__(self, vendor_id=VENDOR_ID, product_id=PRODUCT_ID):
+        """
+        Class of CH347 UART1 interface based on hidapi
+        :param vendor_id: the vender ID of the device
+        :type vendor_id: int
+        :param product_id: the product ID of the device
+        :type product_id: int
+        """
+        super(CH347HIDUART1, self).__init__()
+        target = None
+        for ele in hid.enumerate():
+            if ele["vendor_id"] == vendor_id and ele["product_id"] == product_id:
+                if ele['interface_number'] == 0:  # UART interface ID: 0
+                    target = ele['path']
+
+        self.open_path(target)
+
+    def init_UART(self, baudrate: int = 115200, stop_bits: int = 1, verify_bits: int = 0, timeout: int = 32) -> bool:
+        """
+        Initialize the configuration of the UART interface
+        :param baudrate: the baudrate of the device, default is 115200
+        :type baudrate: int
+        :param stop_bits: number of stop bits, default is 1
+        :type stop_bits: int
+        :param verify_bits: number of verify bits, default is 0
+        :type verify_bits: int
+        :param timeout: timeout in milliseconds, default is 32, this value should not exceed the maximum of 255
+        :type timeout: int
+        :return: operation status
+        :rtype: bool
+        """
+        header = b"\x00\xcb\x08\x00"
+        stop_bits = stop_bits * 2 - 2
+
+        if baudrate < 1200 or baudrate > 7_500_000:
+            raise ValueError("Invalid baudrate, correct value should ranging from 1200 to 7500000")
+
+        if timeout > 255:
+            raise Exception("timeout should not exceed the maximum number of 255")
+
+        payload = header + struct.pack("<IBBBB", baudrate, stop_bits, verify_bits, 0x08, timeout)
+        response = bool(self.send_feature_report(payload))
+
+        # response = self.get_feature_report(0, 16)
+        return response
+
+    def write_raw(self, data: bytes) -> int:
+        """
+        Write data to the device
+        :param data: data to write
+        :type data: bytes
+        :return: wrote length
+        :rtype: int
+        """
+        offset = 0
+        while len(data) - offset > 510:
+            payload = struct.pack("<BH", 0x00, 510) + data[offset:offset + 510]
+            self.write(payload)
+            offset += 510
+        payload = struct.pack("<BH", 0x00, len(data) - offset) + data[offset:len(data)]
+        self.write(payload)
+        offset += len(data) - offset
+
+        return offset
+
+    def read_raw(self, length: int = -1) -> list:
+        """
+        Read data from the device if any byte is available
+        :param length: maximum length of the data, default is -1 which means read all bytes that received
+        :type length: int
+        :return: list of bytes read
+        :rtype: list
+        """
+        self.set_nonblocking(1)
+
+        ret = []
+        while len(ret) < length or length < 0:
+            chunk = self.read(512)
+            if chunk:
+                chunk_len = struct.unpack("<H", bytes(chunk[0:2]))[0]
+                ret.extend(chunk[2:chunk_len+2])
+            else:
+                break
+
+        self.set_nonblocking(0)
+
+        return ret
+
+
 class CH347HIDDev(hid.device):
 
-    def __init__(self, vendor_id=VENDOR_ID, product_id=PRODUCT_ID, interface_num=1,
+    def __init__(self, vendor_id=VENDOR_ID, product_id=PRODUCT_ID, interface_num=None,
                  enable_device_lock=True):
         """
-        Class of CH347 device based on hidapi
+        Class of CH347 SPI/I2C/GPIO interface based on hidapi
         :param vendor_id: the vendor ID of the device
         :type vendor_id: int
         :param product_id: the product ID of the device
         :type product_id: int
-        :param interface_num: the interface number of the device
+        :param interface_num: the interface number of the device (deprecated)
         :type interface_num: int
         :param enable_device_lock: whether to enable device in case of multithreading communication
         :type enable_device_lock: bool
         """
+
+        if interface_num is not None:
+            warnings.warn("interface_num is deprecated and will be removed in future releases."
+                          " From now on interface_num will be set automatically to 1",
+                          DeprecationWarning)
+
         super(CH347HIDDev, self).__init__()
         target = None
         for ele in hid.enumerate():
             if ele["vendor_id"] == vendor_id and ele["product_id"] == product_id:
-                if ele['interface_number'] == interface_num:
+                if ele['interface_number'] == 1:  # SPI/I2C/GPIO interface ID: 1
                     target = ele['path']
 
         self.open_path(target)
