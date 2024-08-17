@@ -112,7 +112,7 @@ class CH347HIDUART1(hid.device):
 class CH347HIDDev(hid.device):
 
     def __init__(self, vendor_id=VENDOR_ID, product_id=PRODUCT_ID, interface_num=None,
-                 enable_device_lock=True, warnings=True):
+                 enable_device_lock=True, warnings_enabled=True):
         """
         Class of CH347 SPI/I2C/GPIO interface based on hidapi
         :param vendor_id: the vendor ID of the device
@@ -127,7 +127,7 @@ class CH347HIDDev(hid.device):
         :type warnings: bool
         """
 
-        if interface_num is not None:
+        if interface_num is not None and warnings_enabled:
             warnings.warn("interface_num is deprecated and will be removed in future releases."
                           " From now on interface_num will be set automatically to 1",
                           DeprecationWarning)
