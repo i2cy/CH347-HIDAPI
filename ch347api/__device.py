@@ -97,7 +97,7 @@ class CH347HIDUART1(hid.device):
 
         ret = []
         while len(ret) < length or length < 0:
-            chunk = self.read(512)
+            chunk = self.read(512, timeout_ms=200)
             if chunk:
                 chunk_len = struct.unpack("<H", bytes(chunk[0:2]))[0]
                 ret.extend(chunk[2:chunk_len+2])
@@ -112,7 +112,7 @@ class CH347HIDUART1(hid.device):
 class CH347HIDDev(hid.device):
 
     def __init__(self, vendor_id=VENDOR_ID, product_id=PRODUCT_ID, interface_num=None,
-                 enable_device_lock=True):
+                 enable_device_lock=True, warnings=True):
         """
         Class of CH347 SPI/I2C/GPIO interface based on hidapi
         :param vendor_id: the vendor ID of the device
@@ -123,6 +123,8 @@ class CH347HIDDev(hid.device):
         :type interface_num: int
         :param enable_device_lock: whether to enable device in case of multithreading communication
         :type enable_device_lock: bool
+        :param warnings: whether to enable warnings output
+        :type warnings: bool
         """
 
         if interface_num is not None:
@@ -147,6 +149,7 @@ class CH347HIDDev(hid.device):
         self.spi_initiated = False
         self.lock_enabled = enable_device_lock
         self.is_busy = False
+        self.warnings_enabled = warnings
 
     def __busy_check(self, timeout=5) -> bool:
         """
@@ -193,7 +196,7 @@ class CH347HIDDev(hid.device):
         :return:
         """
         self.write(b"\x00\x04\x00\xca\x01\x00\x01\x00")  # reset device
-        self.read(64)
+        self.read(512, timeout_ms=200)
 
     # --*-- [ I2C ] --*--
     @__device_lock(2)
@@ -316,7 +319,8 @@ class CH347HIDDev(hid.device):
     def init_SPI(self, clock_freq_level: int = 1, is_MSB: bool = True,
                  mode: int = 0, write_read_interval: int = 0,
                  CS1_high: bool = False,
-                 CS2_high: bool = False):
+                 CS2_high: bool = False,
+                 is_16bits: bool = False):
         """
         initialize SPI configuration
         :param clock_freq_level: clock freq, 0=60M, 1=30M, 2=15M, 3=7.5M, 4=3.75M, 5=1.875M, 6=937.5K，7=468.75K
@@ -331,6 +335,8 @@ class CH347HIDDev(hid.device):
         :type CS1_high: bool
         :param CS2_high: set SPI CS1 port polarity, True=Active-High, False=Active-Low
         :type CS2_high: bool
+        :param is_16bits: enable 16-bits mode
+        :type is_16bits: bool
         :return:
         """
         self.CS1_enabled = False
@@ -342,8 +348,9 @@ class CH347HIDDev(hid.device):
         conf.set_writeReadInterval(write_read_interval)
         conf.set_CS1Polar(CS1_high)
         conf.set_CS2Polar(CS2_high)
+        conf.set_mode16bits(is_16bits)
         self.write(conf)
-        self.read(64)
+        self.read(512, timeout_ms=200)
         self.spi_initiated = True
 
     @__device_lock(2)
@@ -427,7 +434,7 @@ class CH347HIDDev(hid.device):
 
         raw = struct.pack("<BHBH", 0x00, length + 3, 0xc4, length) + data
         self.write(raw)
-        self.read(64)
+        self.read(512, timeout_ms=200)
 
         return length
 
@@ -462,7 +469,11 @@ class CH347HIDDev(hid.device):
 
         ret = []
         while len(ret) < length:
-            frame = self.read(512)
+            frame = self.read(512, timeout_ms=200)
+            if not frame:
+                if self.warnings_enabled:
+                    warnings.warn("read incomplete, read {} bytes (expecting {} bytes)".format(len(ret), length))
+                break
             frame_len, cmd_id, payload_len = struct.unpack("<HBH", bytes(frame[:5]))
             ret += frame[5:5 + payload_len]
 
@@ -472,7 +483,7 @@ class CH347HIDDev(hid.device):
     def spi_read(self, length) -> list:
         """
         read data from SPI device with given length
-        :param length: length of data to read
+        :param length: length of data to read (no more than 32768)
         :type length: int
         :return: list of data received from SPI device
         :rtype: list
@@ -489,7 +500,11 @@ class CH347HIDDev(hid.device):
 
         ret = []
         while len(ret) < length:
-            frame = self.read(512)
+            frame = self.read(512, timeout_ms=200)
+            if not frame:
+                if self.warnings_enabled:
+                    warnings.warn("read incomplete, read {} bytes (expecting {} bytes)".format(len(ret), length))
+                break
             frame_len, cmd_id, payload_len = struct.unpack("<HBH", bytes(frame[:5]))
             ret += frame[5:5 + payload_len]
 

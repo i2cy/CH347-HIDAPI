@@ -53,7 +53,7 @@ def spi_demo():
     # spi = SPIDevice()
 
     # -*- Way 2 -*-:
-    spi = SPIDevice(clock_freq_level=SPIClockFreq.f_30M)
+    spi = SPIDevice(clock_freq_level=SPIClockFreq.f_30M, is_16bits=False)
 
     # -*- Way 3 -*- (using one device object to make thread safe):
     # dev = CH347HIDDev()
@@ -73,7 +73,10 @@ def spi_demo():
 
     # read test (activate CS -> read data -> deactivate CS)
     print("[SPI] performing SPI read test")
-    print("[SPI] received 16 bytes from SPI bus on CS1:", bytes(spi.read_CS1(16)))
+    read_length = 32768
+    for i in range(2048):
+        ret = bytes(spi.read_CS1(read_length))
+    print(f"[SPI] received {read_length} bytes from SPI bus on CS1: {ret[:16]}...(total: {len(ret)} bytes)", )
 
     # write&read test (activate CS -> read data -> deactivate CS)
     random_bytes = b"\xa5\x5a\x5a\xa5" * 128
@@ -121,6 +124,6 @@ def uart_demo():
 
 
 if __name__ == "__main__":
-    i2c_demo()
+    #i2c_demo()
     spi_demo()
-    uart_demo()
+    #uart_demo()

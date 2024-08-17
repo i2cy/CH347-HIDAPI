@@ -15,6 +15,7 @@ class SPIDevice:
     def __init__(self, clock_freq_level: int = 1, is_MSB: bool = True,
                  mode: int = 0, write_read_interval: int = 0,
                  CS1_high: bool = False, CS2_high: bool = False,
+                 is_16bits: bool = False,
                  ch347_device: CH347HIDDev = None):
         """
         Encapsulated class of SPI device
@@ -30,6 +31,8 @@ class SPIDevice:
         :type CS1_high: bool
         :param CS2_high: set SPI CS1 port polarity, True=Active-High, False=Active-Low
         :type CS2_high: bool
+        :param is_16bits: set SPI 16-bit mode
+        :type is_16bits: bool
         :param ch347_device: (defaults to None), will create a new CH347HIDDev if unset
         :type ch347_device: CH347HIDDev, optional
         """
@@ -40,7 +43,8 @@ class SPIDevice:
         self.dev = ch347_device
         if not self.dev.spi_initiated:
             self.dev.init_SPI(clock_freq_level=clock_freq_level, is_MSB=is_MSB, mode=mode,
-                              write_read_interval=write_read_interval, CS1_high=CS1_high, CS2_high=CS2_high)
+                              write_read_interval=write_read_interval, CS1_high=CS1_high, CS2_high=CS2_high,
+                              is_16bits=is_16bits)
 
     def write_CS1(self, data: (list, bytes), keep_cs_active: bool = False) -> int:
         """

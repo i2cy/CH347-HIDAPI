@@ -113,6 +113,17 @@ class SPIConfig(list):
         else:
             self[27] &= 0xbf
 
+    def set_mode16bits(self, is_16bits: bool = True):
+        """
+        set SPI 16 bits mode (default: 8bits)
+        :param is_16bits: bool
+        :return: None
+        """
+        if is_16bits:
+            self[11] = 0x08
+        else:
+            self[11] = 0x00
+
 
 class CSConfig(list):
 

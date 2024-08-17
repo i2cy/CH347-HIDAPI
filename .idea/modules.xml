@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/CH347PythonLib.iml" filepath="$PROJECT_DIR$/.idea/CH347PythonLib.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../GTEM_tests/.idea/GTEM_tests.iml" filepath="$PROJECT_DIR$/../GTEM_tests/.idea/GTEM_tests.iml" />
     </modules>
   </component>
 </project>
