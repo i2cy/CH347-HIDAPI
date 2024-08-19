@@ -12,6 +12,22 @@ from ch347api import CH347HIDDev, I2CDevice, SPIDevice, UARTDevice, SPIClockFreq
 
 
 def i2c_demo():
+    print('[I2C] Scan start...')
+    hiddev = CH347HIDDev()
+    hiddev.init_I2C()
+    print('      ' + ''.join(map(lambda a : '{:02X} '.format(a), range(16))))
+    for i in range(128):
+        if i % 16 == 0:
+            print('0x{:02X}: '.format(i), end='')
+        exists = hiddev.i2c_exists(i)
+        if exists:
+            print('{:02X} '.format(i), end='')
+        else:
+            print('__ ', end='')
+        if i % 16 == 15:
+            print()
+    
+    print('[I2C] MPU6050 example')
     # initialize an i2c communication object (MPU6050 I2C address: 0x68)
     # -*- Way 1 -*-
     i2c = I2CDevice(addr=0x68)

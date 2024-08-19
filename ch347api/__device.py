@@ -270,6 +270,20 @@ class CH347HIDDev(hid.device):
         status, feedback = self.__i2c_read_write_raw(payload, read_len=read_length)
 
         return status, feedback
+    
+    def i2c_exists(self, addr: int | bytes) -> bool:
+        """
+        checks if device responds at given address (useful for I2C scanner)
+        :param addr: 7-bits of device address
+        :type addr: :obj:`int`, :obj:`bytes`
+        :return: bool indicating device available
+        :rtype: bool
+        """
+        addr = convert_i2c_address(addr, read=False)
+
+        _, feedback = self.__i2c_read_write_raw(addr)
+        return len(feedback) == 1 and feedback[0] != 0x00
+
 
     def __i2c_read_write_raw(self, data: bytes, read_len: int = 0) -> Tuple[bool, bytes]:
         """
