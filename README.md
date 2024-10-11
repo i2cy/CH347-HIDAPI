@@ -19,9 +19,9 @@ _+ [CH347-HIDAPI Github Page](https://github.com/i2cy/ch347-hidapi) +_
 </p>
 
 ## Abstract
-This project is the API library of CH347 USB-SPI/I2C/UART bridge chip based on Python.
+This project is the API library of CH347T USB-SPI/I2C/UART bridge chip based on Python.
 
-`Standard USB-HID mode setting of CH347 chip supported only`
+`Standard USB-HID mode setting of CH347T chip supported only`
 
 This library provides full access of SPI/I2C/UART settings and communication with CH347 USB-SPI/I2C/UART 
 bridge chip in Python language.
