@@ -48,6 +48,9 @@ def convert_int_to_bytes(inputs: (int, bytes)) -> bytes:
         while data_copy:
             b_len += 1
             data_copy = data_copy // 256
+        if b_len == 0:
+            b_len = 1 
         inputs = inputs.to_bytes(b_len, 'big', signed=False)
+        
 
     return inputs

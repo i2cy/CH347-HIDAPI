@@ -303,11 +303,13 @@ class CH347HIDDev(hid.device):
         elif read_len == 1:
             tail = b"\xc0\x75"
             if len(data) > 1:
-                tail = b"\x74\x81\xd1" + tail
+                # Convert write address into read address
+                tail = b"\x74\x81" + bytes([data[0] | 0x01]) + tail
         elif read_len < 64:
             tail = struct.pack("<bBB", -65 + read_len, 0xc0, 0x75)
             if len(data) > 1:
-                tail = b"\x74\x81\xd1" + tail
+                # Convert write address into read address
+                tail = b"\x74\x81" + bytes([data[0] | 0x01]) + tail
         else:
             raise Exception("read length exceeded max size of 63 Bytes")
         payload = struct.pack("<BHBBB", 0x00, len(data) + len(tail) + 4, 0xaa, 0x74, len(data) | 0b1000_0000)
